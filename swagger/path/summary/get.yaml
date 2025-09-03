@@ -1,0 +1,44 @@
+#/swagger/paths/summary/get.yaml
+tags:
+  - Summary
+summary: Get list of transaction's summary
+operationId: getSummary
+description: 'Get list of Transaction`s summary with this endpoint'
+security:
+  - bearerAuth: []
+parameters:
+  - in: query
+    name: date
+    schema:
+      type: string
+      example: 'mm-yyyy'
+      description: "All transaction's summary from date"
+responses:
+  '200':
+    description: Successfully found transaction's summary!
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: Successfully found transaction's summary!
+            data:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: ../../components/schemas/summary.yaml
+  '404':
+    $ref: '../../components/responses/404.yaml'

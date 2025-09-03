@@ -1,0 +1,37 @@
+type: object
+required:
+  - _id
+  - date
+  - type
+  - sum
+  - userId
+properties:
+  _id:
+    description: "transaction's id"
+    type: string
+    example: 65e4decdd286b30065d54af9
+  date:
+    description: "transaction's date"
+    type: string
+    example: '22-12-2025'
+  type:
+    description: "transaction's type"
+    type: string
+    enum: ['INCOME', 'EXPENSE']
+  category:
+    description: "transaction's category"
+    type: string
+    enum: ['Main expenses','Products', 'Car', 'Self care', 'Child care', 'Household products','Education', 'Leisure', 'Other expenses', 'Entertaiment', 'Income']
+  comment:
+    description: "transaction's comment"
+    type: string
+    example: 'payment for first semester'
+  sum:
+    description: "transaction's sum"
+    type: number
+    example: 1000
+  userId:
+    description: "transaction's user id"
+    type: string
+    example: 65e4decdd286b30065d54af9
+  

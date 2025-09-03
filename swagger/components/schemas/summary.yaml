@@ -1,0 +1,10 @@
+type: object
+properties:
+  total:
+    description: "transaction's id"
+    type: number
+    example: 111111
+  category:
+    description: "transaction's date"
+    type: string
+    enum: ['Main expenses','Products', 'Car', 'Self care', 'Child care', 'Household products','Education', 'Leisure', 'Other expenses', 'Entertaiment']

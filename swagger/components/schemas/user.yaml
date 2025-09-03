@@ -1,0 +1,32 @@
+type: object
+required:
+  - _id
+  - name
+  - email
+  - password
+properties:
+  _id:
+    description: "User's id"
+    type: string
+    example: 65e4decdd286b30065d54af9
+  name:
+    description: "User`s name. Should be 3-20 characters long."
+    type: string
+    example: 'John Doe'
+  email:
+    description: "User`s email address. Email must be a valid email address."
+    type: string
+    example: john_doe@mail.com
+  password:
+    description: "User password Should be 8-64 characters long."
+    type: string
+    example: qwerty123
+  balance:
+    description: "User balance"
+    type: number
+    default: 0
+  avatar:
+    description: "User avatar"
+    type: string
+    default: null
+ 

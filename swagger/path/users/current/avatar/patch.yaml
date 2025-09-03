@@ -1,0 +1,45 @@
+tags:
+  - Users
+summary: Update user avatar
+operationId: addUserAvatar
+description: 'Update user avatar with payload'
+security:
+  - bearerAuth: []
+requestBody:
+  content:
+    multipart/form-data:
+      schema:
+        type: object
+        required:
+          - avatar
+        properties:
+          avatar:
+            description: "User avatar"
+            type: string
+            format: binary
+responses:
+  '200':
+    description: Update user avatar
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: Avatar updated successfully
+            data:
+              type: object
+              $ref: '../../../../components/schemas/user.yaml'
+  '404':
+    $ref: '../../../../components/responses/404.yaml'
+  '500':
+    $ref: '../../../../components/responses/500.yaml'
+

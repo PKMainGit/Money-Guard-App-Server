@@ -1,0 +1,64 @@
+#/swagger/paths/transactions/post.yaml
+tags:
+  - Transactions
+summary: Create Transaction
+operationId: createTransaction
+description: 'Create a transaction with payload'
+security:
+  - bearerAuth: []
+requestBody:
+  content:
+     application/json:
+      schema:
+        type: object
+        required:
+          - date
+          - type
+          - sum
+          - category
+        properties:
+          date:
+            description: "transaction's date"
+            type: string
+            example: 'dd-mm-yyyy'
+          type:
+            description: "transaction's type"
+            type: string
+            enum: ['Income', 'Expense']
+          category:
+            description: "transaction's category"
+            type: string
+            enum: ['Main expenses','Products', 'Car', 'Self care', 'Child care', 'Household products','Education', 'Leisure', 'Other expenses', 'Entertainment']
+          comment:
+            description: "transaction's comment"
+            type: string
+            example: 'payment for first semester'
+          sum:
+            description: "transaction's sum"
+            type: number
+            example: 1000
+responses:
+  '201':
+    description: Transaction Successfully Created
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 201
+            message:
+              type: string
+              example: Successfully created a transaction!
+            data:
+              type: object
+              $ref: '../../components/schemas/transaction.yaml'
+  '404':
+    $ref: '../../components/responses/404.yaml'
+  '500':
+    $ref: '../../components/responses/500.yaml'

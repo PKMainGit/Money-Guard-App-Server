@@ -1,0 +1,88 @@
+tags:
+  - Auth
+summary: Login user
+operationId: loginUser
+description: 'Login an existing user using email and password'
+security: []
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - email
+          - password
+        properties:
+          email:
+            description: 'User`s email address. Email must be a valid email address.'
+            type: string
+            example: nelson89@gmail.com
+          password:
+            description: 'User`s password.'
+            type: string
+            example: querty1234
+responses:
+  '200':
+    description: 'Successfully logged in the user'
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: Successfully logged in an user!
+            data:
+              type: object
+              required:
+                - user
+                - accessToken
+              properties:
+                user:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                      example: "6611234567890abc123456789"
+                    name:
+                      type: string
+                      example: John Doe
+                    email:
+                      type: string
+                      example: nelson89@gmail.com
+                    balance: 
+                      type: number
+                      example: 0
+                accessToken:
+                  type: string
+                  description: JWT access token
+                  example: "M8UavAGWqMJiC5qPStjpa7WefmGlViYYNMnUzfsv"
+  '400':
+    description: 'Bad Request'
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+          properties:
+            status:
+              type: integer
+              example: 400
+            message:
+              type: array
+              items:
+                type: string
+                example: 'Email or password is incorrect'
+  '401':
+    $ref: '../../../components/responses/401.yaml'
+  '500':
+    $ref: '../../../components/responses/500.yaml'

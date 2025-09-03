@@ -1,0 +1,68 @@
+openapi: 3.1.0
+info:
+  version: 1.0.0
+  title: Money guard app
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  description: 
+    This is a documentation of Money Guard App
+tags:
+  - name: Auth
+    description: Auth operations.
+  - name: Users
+    description: Operation about users.
+  - name: Transactions
+    description: Operations about tramsactions.
+  - name: Summary
+    description: Summary info about user transactions
+  - name: Categories
+    description: Get all categories
+servers:
+  - url: https://server-money-guard-teamproject.onrender.com
+paths:
+  /auth/register:
+    post:
+      $ref: '../swagger/path/auth/register/post.yaml'
+
+  /auth/login:
+    post:
+      $ref: '../swagger/path/auth/login/post.yaml'
+
+  /auth/logout:
+    post:
+      $ref: '../swagger/path/auth/logout/post.yaml'
+  /users/current:
+    get: 
+      $ref: '../swagger/path/users/current/get.yaml'
+    patch: 
+      $ref: '../swagger/path/users/current/patch.yaml'
+  /users/current/avatar:
+    patch: 
+      $ref: '../swagger/path/users/current/avatar/patch.yaml'
+  /transactions:
+    get:
+      $ref: '../swagger/path/transactions/get.yaml'
+    post:
+      $ref: '../swagger/path/transactions/post.yaml'
+  
+  /transactions/{id}: 
+    get: 
+      $ref: '../swagger/path/transactions/{id}/get.yaml'
+    patch: 
+      $ref: '../swagger/path/transactions/{id}/patch.yaml'
+    delete: 
+      $ref: '../swagger/path/transactions/{id}/delete.yaml'
+  
+  /summary:
+    get:
+      $ref: '../swagger/path/summary/get.yaml'
+  /categories:
+    get: 
+      $ref: '../swagger/path/categories/get.yaml'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

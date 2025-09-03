@@ -1,0 +1,107 @@
+tags:
+  - Auth
+summary: Register user
+operationId: registerUser
+description: 'Register a new user using email and password'
+security: []
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - name
+          - email
+          - password
+        properties:
+          name:
+            description: "User`s name. Should be 3-20 characters long."
+            type: string
+            example: 'John Doe'
+          email:
+            description: 'User`s email address. Email must be a valid email address. Must be less then 64 characters.'
+            type: string
+            example: nelson89@gmail.com
+          password:
+            description: 'User password Should be 8-64 characters long.'
+            type: string
+            example: querty1234
+responses:
+  '201':
+    description: 'Successfully registered a user!'
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 201
+            message:
+              type: string
+              example: Successfully registered a user!
+            data:
+              type: object
+              required:
+                - user
+                - accessToken
+              properties:
+                user:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                      example: "6611234567890abc123456789"
+                    name:
+                      type: string
+                      example: John Doe
+                    email:
+                      type: string
+                      example: nelson89@gmail.com
+                    balance: 
+                      type: number
+                      example: 0
+                accessToken:
+                  type: string
+                  description: JWT access token
+                  example: "M8UavAGWqMJiC5qPStjpa7WefmGlViYYNMnUzfsv"
+  '400':
+    description: 'Bad Request'
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+          properties:
+            status:
+              type: integer
+              example: 400
+            message:
+              type: array
+              items:
+                type: string
+                example: '"email" is required'
+  '409':
+    description: 'Conflict. Email is in use'
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+          properties:
+            status:
+              type: integer
+              example: 409
+            message:
+              type: array
+              example: 'Email in use'
+  '500':
+    $ref: '../../../components/responses/500.yaml'
