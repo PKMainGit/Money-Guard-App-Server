@@ -3,7 +3,7 @@ import { ctrlWrapper } from '../utils/ctrlWrapper.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import {
   validateRegistration,
-  // loginUserSchema,
+  validateLogin,
   // confirmOAuthSchema,
   // requestResetEmailSchema,
   // resetEmailSchema
@@ -12,8 +12,8 @@ import {
   registerUserController,
   loginUserController,
   logoutUserController,
-  getGoogleOAuthUrlController,
-  confirmOAuthController,
+  // getGoogleOAuthUrlController,
+  // confirmOAuthController,
   requestResetPasswordController,
   resetEmailController,
 } from '../controllers/auth.js';
@@ -28,19 +28,19 @@ router.post(
 
 router.post(
   '/login',
-  // validateBody(loginUserSchema),
+  validateBody(validateLogin),
   ctrlWrapper(loginUserController),
 );
 
 router.post('/logout', ctrlWrapper(logoutUserController));
 
-router.get('/get-oauth-url', ctrlWrapper(getGoogleOAuthUrlController));
+// router.get('/get-oauth-url', ctrlWrapper(getGoogleOAuthUrlController));
 
-router.post(
-  '/confirm-oauth',
-  // validateBody(confirmOAuthSchema),
-  ctrlWrapper(confirmOAuthController),
-);
+// router.post(
+//   '/confirm-oauth',
+//   // validateBody(confirmOAuthSchema),
+//   ctrlWrapper(confirmOAuthController),
+// );
 
 router.post(
   '/send-reset-email',

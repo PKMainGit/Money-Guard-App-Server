@@ -18,17 +18,17 @@ export const registerUserController = async (req, res) => {
 
 export const loginUserController = async (req, res) => {
   const { user, session } = await loginUser(req.body);
-
+	
   res.cookie('refreshToken', session.refreshToken, {
     httpOnly: true,
     expires: session.refreshTokenValidUntil,
   });
-  res.cookie('sessionId', session._id, {
+  res.cookie('sessionId', session.id, {
     httpOnly: true,
     expires: session.refreshTokenValidUntil,
-	});
+  });
 	
-	const updatedBalance = await recalculateUserBalance(user._id);
+	// await recalculateUserBalance(user.id);
 
   res.status(200).json({
     status: 200,
@@ -53,46 +53,46 @@ export const logoutUserController = async (req, res) => {
   res.status(204).send();
 };
 
-export const getGoogleOAuthUrlController = async (_req, res) => {
-  const url = getOAuthURL();
-  res.json({
-    status: 200,
-    message: 'Successfully get Google OAuth url!',
-    data: {
-      oauth_url: url,
-    },
-  });
-};
+// export const getGoogleOAuthUrlController = async (_req, res) => {
+//   const url = getOAuthURL();
+//   res.json({
+//     status: 200,
+//     message: 'Successfully get Google OAuth url!',
+//     data: {
+//       oauth_url: url,
+//     },
+//   });
+// };
 
-export async function confirmOAuthController(req, res) {
-  const ticket = await validateCode(req.body.code);
+// export async function confirmOAuthController(req, res) {
+//   const ticket = await validateCode(req.body.code);
 
-  const session = await loginOrRegister(
-    ticket.payload.email,
-    ticket.payload.name,
-  );
+//   const session = await loginOrRegister(
+//     ticket.payload.email,
+//     ticket.payload.name,
+//   );
 
-  const setSessionCookies = (res, session) => {
-    res.cookie('refreshToken', session.refreshToken, {
-      httpOnly: true,
-      expires: session.refreshTokenValidUntil,
-    });
-    res.cookie('sessionId', session._id, {
-      httpOnly: true,
-      expires: session.refreshTokenValidUntil,
-    });
-  };
+//   const setSessionCookies = (res, session) => {
+//     res.cookie('refreshToken', session.refreshToken, {
+//       httpOnly: true,
+//       expires: session.refreshTokenValidUntil,
+//     });
+//     res.cookie('sessionId', session._id, {
+//       httpOnly: true,
+//       expires: session.refreshTokenValidUntil,
+//     });
+//   };
 
-  setSessionCookies(res, session);
+//   setSessionCookies(res, session);
 
-  res.json({
-    status: 200,
-    message: 'Successfully logged in an user!',
-    data: {
-      accessToken: session.accessToken,
-    },
-  });
-}
+//   res.json({
+//     status: 200,
+//     message: 'Successfully logged in an user!',
+//     data: {
+//       accessToken: session.accessToken,
+//     },
+//   });
+// }
 
 export const requestResetPasswordController = async (req, res) => {
   const { email } = req.body;

@@ -11,6 +11,7 @@ import handlebars from 'handlebars';
 import { sendEmail } from '../utils/sendMail.js';
 import { pool } from '../db/dbConnect.js';
 import { generateTokens } from '../utils/generateTokens.js';
+import { ref } from 'node:process';
 // import { ref } from 'node:process';
 
 
@@ -62,26 +63,37 @@ export const registerUser = async (payload) => {
 };
 
 export const loginUser = async (payload) => {
-  const user = await UserCollection.findOne({ email: payload.email });
-  if (!user) throw createHttpError(400, 'User not found');
+  const existingUser = await pool.query(
+    `SELECT * FROM users WHERE email = $1`,
+    [payload.email],
+  );
+  // const user = await UserCollection.findOne({ email: payload.email });
+  if (existingUser.rows.length === 0) {
+    throw createHttpError(400, 'User not found');
+  }
+
+  const user = existingUser.rows[0];
 
   const isEqual = await bcrypt.compare(payload.password, user.password);
   if (!isEqual) {
     throw createHttpError(401, 'Unauthorized');
   }
 
-  await SessionCollection.deleteOne({ userId: user._id });
+  // await SessionCollection.deleteOne({ userId: user._id });
+  await pool.query(`DELETE FROM sessions WHERE user_id = $1`, [user.id]);
 
-  const accessToken = randomBytes(30).toString('base64');
-  const refreshToken = randomBytes(30).toString('base64');
+  const { accessToken, refreshToken } = generateTokens(user.id);
+  const accessValidUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 години
+  const refreshValidUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 днів
 
-  const session = await SessionCollection.create({
-    userId: user._id,
-    accessToken,
-    refreshToken,
-    accessTokenValidUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    refreshTokenValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-  });
+	const sessionResult = await pool.query(
+		`INSERT INTO sessions (user_id, access_token, refresh_token, access_token_valid_until, refresh_token_valid_until)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING *`,
+		[user.id, accessToken, refreshToken, accessValidUntil, refreshValidUntil]
+	);
+
+	const session = sessionResult.rows[0];
 
   return {
     user,
