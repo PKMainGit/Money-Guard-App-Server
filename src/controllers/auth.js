@@ -17,25 +17,25 @@ export const registerUserController = async (req, res) => {
 };
 
 export const loginUserController = async (req, res) => {
-  const { user, session } = await loginUser(req.body);
-	
-  res.cookie('refreshToken', session.refreshToken, {
+	const { user, session } = await loginUser(req.body);
+
+  res.cookie('refreshToken', session.refresh_token, {
     httpOnly: true,
-    expires: session.refreshTokenValidUntil,
+    expires: session.refresh_token_valid_until,
   });
   res.cookie('sessionId', session.id, {
     httpOnly: true,
-    expires: session.refreshTokenValidUntil,
+    expires: session.refresh_token_valid_until,
   });
 	
-	// await recalculateUserBalance(user.id);
+	await recalculateUserBalance(user.id);
 
   res.status(200).json({
     status: 200,
     message: 'Successfully logged in an user!',
     data: {
       user,
-      accessToken: session.accessToken,
+      accessToken: session.access_token,
     },
   });
 };

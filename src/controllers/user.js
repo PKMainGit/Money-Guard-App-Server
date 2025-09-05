@@ -5,23 +5,23 @@ import { getEnvVar } from '../utils/getEnvVar.js';
 import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { saveFileToUploadDir } from '../utils/saveFileToUploadDir.js';
 
-export const getCurrentUserController = async (req, res) => {
-  const updatedBalance = await recalculateUserBalance(req.user._id);
+export const getCurrentUserController = async (req, res, next) => {
+  try {
+    await recalculateUserBalance(req.user.id);
+    const user = await getCurrentUser(req.user.id);
+		console.log('USER RETURNED TO FRONT:', user);
+    if (!user) {
+      return res.status(404).json({ status: 404, message: 'User not found' });
+    }
 
-  const user = await getCurrentUser(req.user.id);
-
-  if (!user) {
-    return res.status(404).json({
-      status: 404,
-      message: 'User not found',
+    res.status(200).json({
+      status: 200,
+      message: 'User data fetched successfully',
+      data: user,
     });
+  } catch (error) {
+    next(error);
   }
-
-  res.status(200).json({
-    status: 200,
-    message: 'User data fetched successfully',
-    data: user,
-  });
 };
 
 export const addUserAvatarController = async (req, res) => {

@@ -17,10 +17,10 @@ import { recalculateUserBalance } from '../services/calcBalance.js';
 export const getTransactionsController = async (req, res, next) => {
   try {
     const { sortBy, sortOrder } = parseSortParams(req.query);
-    const filter = parseFilterParams(req.query);
-
+		const filter = parseFilterParams(req.query);
+		
     const transactions = await getAllTransactions({
-      userId: req.user._id,
+      userId: req.user.id,
       sortBy,
       sortOrder,
       filter,
@@ -31,8 +31,8 @@ export const getTransactionsController = async (req, res, next) => {
       message: 'Successfully found transactions!',
       data: transactions.data,
     });
-  } catch (error) {
-    next(error);
+	} catch (error) {
+		next(error);
   }
 };
 
@@ -91,7 +91,7 @@ export const createTransactionController = async (req, res, next) => {
       ...req.body,
     });
 
-    const updatedBalance = await recalculateUserBalance(req.user._id);
+    const updatedBalance = await recalculateUserBalance(req.user.id);
 
     res.status(201).json({
       status: 201,
@@ -116,7 +116,7 @@ export const patchTransactionController = async (req, res, next) => {
       return;
 		}
 		
-		const updatedBalance = await recalculateUserBalance(req.user._id);
+		const updatedBalance = await recalculateUserBalance(req.user.id);
 
     res.json({
       status: 200,
@@ -141,7 +141,7 @@ export const deleteTransactionController = async (req, res, next) => {
       return;
 		}
 		
-		const updatedBalance = await recalculateUserBalance(req.user._id);
+		const updatedBalance = await recalculateUserBalance(req.user.id);
 
     res.status(204).send();
   } catch (error) {

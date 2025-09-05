@@ -1,23 +1,23 @@
 // import { TransactionsCollection } from '../models/transaction.js';
 import { SORT_ORDER } from '../constants/index.js';
+import { pool } from '../db/dbConnect.js';
 
 export const getAllTransactions = async ({
   userId,
   sortOrder = SORT_ORDER.ASC,
-  sortBy = '_id',
+  sortBy = 'id',
   filter = {},
 }) => {
-  const query = {};
+  // if (filter.date) {
+  //   query.date = filter.date.trim();
+  // }
 
-  if (filter.date) {
-    query.date = filter.date.trim();
-  }
-
-  const transactions = await TransactionsCollection.find({ userId, ...query })
-    .sort({ [sortBy]: sortOrder })
-    .exec();
+	const transactions = await pool.query(
+		` SELECT * FROM transactions WHERE user_id = $1`,
+		[userId]
+	)
   return {
-    data: transactions,
+    data: transactions.rows,
   };
 };
 
