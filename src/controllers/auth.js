@@ -41,16 +41,16 @@ export const loginUserController = async (req, res) => {
 };
 
 export const logoutUserController = async (req, res) => {
-  const { sessionId, refreshToken } = req.cookies;
+  const { sessionId } = req.cookies;
 
-  if (typeof sessionId === 'string' && typeof refreshToken === 'string') {
-    await logoutUser(sessionId, refreshToken);
+  if (typeof sessionId === 'string') {
+    await logoutUser(sessionId);
   }
 
   res.clearCookie('sessionId');
   res.clearCookie('refreshToken');
 
-  res.status(204).send();
+	res.status(204).send();
 };
 
 // export const getGoogleOAuthUrlController = async (_req, res) => {

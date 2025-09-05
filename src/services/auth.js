@@ -101,8 +101,8 @@ export const loginUser = async (payload) => {
   };
 };
 
-export const logoutUser = async (sessionId, refreshToken) => {
-  await SessionCollection.deleteOne({ _id: sessionId, refreshToken });
+export const logoutUser = async (sessionId) => {
+  await pool.query(`DELETE FROM sessions WHERE id = $1`, [sessionId]);
   return undefined;
 };
 
