@@ -1,4 +1,4 @@
-import { TransactionsSchema } from '../models/transaction.js';
+// import { TransactionsSchema } from '../models/transaction.js';
 
 export const getCategories = async () => {
   // let allTransactions = [];

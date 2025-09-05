@@ -4,14 +4,14 @@ import { getOAuthURL, validateCode } from '../utils/googleOAuth2.js';
 import { recalculateUserBalance } from '../services/calcBalance.js'; 
 
 export const registerUserController = async (req, res) => {
-  const { user, session } = await registerUser(req.body);
+  const { user, tokens } = await registerUser(req.body);
 
   res.status(201).json({
     status: 201,
     message: 'Successfully registered a user!',
     data: {
       user,
-      accessToken: session.accessToken,
+      accessToken: tokens.accessToken,
     },
   });
 };

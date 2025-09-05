@@ -1,42 +1,63 @@
 import bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
-import UserCollection from '../models/userSchema.js';
-import SessionCollection from '../models/sessionSchema.js';
-import createHttpError from 'http-errors';
 import jwt from 'jsonwebtoken';
+// import { randomBytes } from 'crypto';
+// import UserCollection from '../models/userSchema.js';
+// import SessionCollection from '../models/sessionSchema.js';
+import createHttpError from 'http-errors';
 import { getEnvVar } from '../utils/getEnvVar.js';
 import fs from "node:fs/promises";
 import { SMTP, TEMPLATES_DIR } from '../constants/index.js';
 import handlebars from 'handlebars';
 import { sendEmail } from '../utils/sendMail.js';
+import { pool } from '../db/dbConnect.js';
+import { generateTokens } from '../utils/generateTokens.js';
+// import { ref } from 'node:process';
 
 
 
 export const registerUser = async (payload) => {
-  const existingUser = await UserCollection.findOne({ email: payload.email });
-  if (existingUser) throw createHttpError(409, 'Email in use');
+  const existingUser = await pool.query(
+    `SELECT * FROM users WHERE email = $1`,
+    [payload.email],
+  );
+  if (existingUser.rows.length > 0) throw createHttpError(409, 'Email in use');
 
   const encryptedPassword = await bcrypt.hash(payload.password, 10);
 
-  const user = await UserCollection.create({
-    ...payload,
-    password: encryptedPassword,
-  });
+	const { rows: newUser } = await pool.query(
+    `INSERT INTO users (name, email, password, balance, avatar)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, email, name, balance, avatar`,
+    [
+      payload.name,
+      payload.email,
+      encryptedPassword,
+      payload.balance || 0,
+      payload.avatar || "",
+    ],
+  );
 
-  const accessToken = randomBytes(30).toString('base64');
-  const refreshToken = randomBytes(30).toString('base64');
+  // const accessToken = randomBytes(30).toString('base64');
+	// const refreshToken = randomBytes(30).toString('base64');
+	const { accessToken, refreshToken } = generateTokens(newUser[0].id)
+	const accessValidUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+	const refreshValidUntil = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
-  const session = await SessionCollection.create({
-    userId: user._id,
-    accessToken,
-    refreshToken,
-    accessTokenValidUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    refreshTokenValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-  });
+	await pool.query(
+    `INSERT INTO sessions (user_id, access_token, refresh_token, access_token_valid_until,refresh_token_valid_until)
+		VALUES ($1, $2, $3, $4, $5)`,
+    [
+      newUser[0].id,
+      accessToken,
+      refreshToken,
+      accessValidUntil,
+      refreshValidUntil,
+    ],
+  );
 
   return {
-    user,
-    session,
+    user: newUser[0],
+    tokens: {accessToken, refreshToken}
   };
 };
 

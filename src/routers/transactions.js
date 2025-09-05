@@ -3,7 +3,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/authenticate.js';
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
-import { isValidId } from '../middlewares/isValidId.js';
+// import { isValidId } from '../middlewares/isValidId.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { createTransactionSchema } from '../validation/transaction.js';
 import { updateTransactionSchema } from '../validation/transaction.js';
@@ -21,8 +21,8 @@ const router = Router();
 router.use(authenticate)
 
 router.get('/', getTransactionsController);
-
-router.get('/:transactionId', isValidId, getTransactionByIdController);
+//isValidId,
+router.get('/:transactionId', getTransactionByIdController);
 
 router.post('/', ctrlWrapper(createTransactionController));
 
@@ -34,7 +34,7 @@ router.delete(
 
 router.patch(
   '/:transactionId',
-  isValidId,
+  // isValidId,
   validateBody(updateTransactionSchema),
   ctrlWrapper(patchTransactionController),
 );

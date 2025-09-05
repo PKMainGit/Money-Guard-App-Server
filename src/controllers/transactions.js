@@ -11,7 +11,7 @@ import {
 
 import { parseSortParams } from '../utils/parseSortParams.js';
 import { parseFilterParams } from '../utils/parseFilterParams.js';
-import mongoose from 'mongoose';
+// import mongoose from 'mongoose';
 import { recalculateUserBalance } from '../services/calcBalance.js'; 
 
 export const getTransactionsController = async (req, res, next) => {

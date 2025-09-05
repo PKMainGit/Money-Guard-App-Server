@@ -1,4 +1,4 @@
-import { TransactionsCollection } from '../models/transaction.js';
+// import { TransactionsCollection } from '../models/transaction.js';
 import { SORT_ORDER } from '../constants/index.js';
 
 export const getAllTransactions = async ({

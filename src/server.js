@@ -2,8 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import pino from 'pino-http';
 
-import { initMongoConnection } from './db/initMongoConnection.js';
 import { getEnvVar } from './utils/getEnvVar.js';
+
+import { createTables } from './db/createTables.js';
+import { testConnection } from './db/testDbConnection.js';
+// import { initMongoConnection } from './db/initMongoConnection.js';
 
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
@@ -18,8 +21,12 @@ const PORT = Number(getEnvVar('PORT', '3000'));
 
 export const setupServer = async () => {
   try {
-    await initMongoConnection();
-    console.log('MongoDB connection established successfully!');
+		// await initMongoConnection();
+		await testConnection();
+		// console.log('MongoDB connection established successfully!');
+		console.log('SQLDB connection established successfully!');
+
+		await createTables();
 
     app.use(
       cors({
