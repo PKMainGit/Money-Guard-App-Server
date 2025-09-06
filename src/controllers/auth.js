@@ -1,6 +1,6 @@
 import { registerUser, loginUser, logoutUser, requestResetPassword, resetPassword } from '../services/auth.js';
-import { loginOrRegister } from '../services/auth.js';
-import { getOAuthURL, validateCode } from '../utils/googleOAuth2.js';
+// import { loginOrRegister } from '../services/auth.js';
+// import { getOAuthURL, validateCode } from '../utils/googleOAuth2.js';
 import { recalculateUserBalance } from '../services/calcBalance.js'; 
 
 export const registerUserController = async (req, res) => {
@@ -105,7 +105,7 @@ export const requestResetPasswordController = async (req, res) => {
   });
 };
 
-export const resetEmailController = async (req, res) => {
+export const resetPasswordController = async (req, res) => {
   await resetPassword(req.body);
 
   res.json({

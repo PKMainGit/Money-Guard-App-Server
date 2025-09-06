@@ -106,43 +106,47 @@ export const logoutUser = async (sessionId) => {
   return undefined;
 };
 
-export async function loginOrRegister(email, name) {
-  const accessToken = randomBytes(30).toString('base64');
-  const refreshToken = randomBytes(30).toString('base64');
+// export async function loginOrRegister(email, name) {
+//   const accessToken = randomBytes(30).toString('base64');
+//   const refreshToken = randomBytes(30).toString('base64');
 
-  const user = await UserCollection.findOne({ email });
+//   const user = await UserCollection.findOne({ email });
 
-  if (!user) {
-    const password = await bcrypt.hash(randomBytes(30).toString('base64'), 10);
+//   if (!user) {
+//     const password = await bcrypt.hash(randomBytes(30).toString('base64'), 10);
 
-    const newUser = await UserCollection.create({
-      name,
-      email,
-      password,
-    });
+//     const newUser = await UserCollection.create({
+//       name,
+//       email,
+//       password,
+//     });
 
-    return await SessionCollection.create({
-      userId: newUser._id,
-      accessToken,
-      refreshToken,
-      accessTokenValidUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      refreshTokenValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    });
-  }
+//     return await SessionCollection.create({
+//       userId: newUser._id,
+//       accessToken,
+//       refreshToken,
+//       accessTokenValidUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
+//       refreshTokenValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+//     });
+//   }
 
-  await SessionCollection.deleteOne({ userId: user._id });
-  return await SessionCollection.create({
-    userId: user._id,
-    accessToken,
-    refreshToken,
-    accessTokenValidUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    refreshTokenValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-  });
-}
+//   await SessionCollection.deleteOne({ userId: user._id });
+//   return await SessionCollection.create({
+//     userId: user._id,
+//     accessToken,
+//     refreshToken,
+//     accessTokenValidUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
+//     refreshTokenValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+//   });
+// }
 
 export const requestResetPassword = async (email) => {
   try {
-    const user = await UserCollection.findOne({ email });
+    const { rows } = await pool.query(
+      'SELECT id, name, email FROM users WHERE email = $1',
+      [email],
+    );
+    const user = rows[0];
 
     if (!user) {
       throw createHttpError(404, 'User not found');
@@ -150,10 +154,10 @@ export const requestResetPassword = async (email) => {
 
     const resetToken = jwt.sign(
       {
-        sub: user._id,
+        sub: user.id,
         email,
       },
-      getEnvVar('JWT_SECRET'),
+      getEnvVar('RESET_TOKEN_SECRET'),
       {
         expiresIn: '5m',
       },
@@ -164,7 +168,7 @@ export const requestResetPassword = async (email) => {
     const template = handlebars.compile(templateSource);
     const html = template({
       name: user.name,
-      link: `${getEnvVar('APP_DOMAIN')}/?token=${resetToken}`,
+      link: `${getEnvVar('APP_DOMAIN')}/reset-password?token=${resetToken}`,
     });
 
     await sendEmail({
@@ -183,11 +187,12 @@ export const requestResetPassword = async (email) => {
 
 export const resetPassword = async (payload) => {
   try {
-    const entries = jwt.verify(payload.token, getEnvVar('JWT_SECRET'));
-    const user = await UserCollection.findOne({
-      email: entries.email,
-      _id: entries.sub,
-    });
+    const entries = jwt.verify(payload.token, getEnvVar('RESET_TOKEN_SECRET'));
+    const { rows } = await pool.query(
+      'SELECT id, email FROM users WHERE id = $1 AND email = $2',
+      [entries.sub, entries.email],
+    );
+    const user = rows[0];
 
     if (!user) {
       throw createHttpError(404, 'User not found');
@@ -195,12 +200,12 @@ export const resetPassword = async (payload) => {
 
     const encryptedPassword = await bcrypt.hash(payload.password, 10);
 
-    await UserCollection.updateOne(
-      { _id: user._id },
-      { password: encryptedPassword },
-    );
+    await pool.query('UPDATE users SET password = $1 WHERE id = $2', [
+      encryptedPassword,
+      user.id,
+    ]);
 
-    await SessionCollection.deleteOne({ userId: user._id });
+    await pool.query('DELETE FROM sessions WHERE user_id = $1', [user.id]);
     
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
