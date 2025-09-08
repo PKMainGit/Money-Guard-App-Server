@@ -22,37 +22,76 @@ export const getAllTransactions = async ({
 };
 
 export const getTransactionById = async (transactionId, userId) => {
-  console.log(transactionId);
+  const query = `
+    SELECT *
+    FROM transactions
+    WHERE id = $1 AND user_id = $2
+  `;
+  const values = [transactionId, userId];
 
-  const transaction = await TransactionsCollection.findById(
-    transactionId,
-    userId,
-  );
-  return transaction;
+  const result = await pool.query(query, values);
+  return result.rows[0] || null;
 };
 
 export const createTransaction = async (payload) => {
-  const transaction = await TransactionsCollection.create(payload);
-  return transaction;
+	const { userId, sum, type, category, date, comment } = payload;
+	
+	console.log('🛠 Creating transaction with payload:', {
+    userId,
+    sum,
+    type,
+    category,
+    date,
+    comment,
+    sumType: typeof sum, // подивимось який тип насправді
+  });
+
+  const result = await pool.query(
+    `INSERT INTO transactions (user_id, sum, type, category, date, comment)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING *`,
+    [userId, sum, type, category, date, comment],
+  );
+
+  return result.rows[0];
 };
 
+
 export const deleteTransaction = async (transactionId, userId) => {
-  const transaction = await TransactionsCollection.findOneAndDelete({
-    _id: transactionId,
-    userId,
-  });
-  return transaction;
+  const id = Number(transactionId); // явне перетворення в INT
+  const query = `
+    DELETE FROM transactions
+    WHERE id = $1 AND user_id = $2
+    RETURNING *
+  `;
+  const values = [id, userId];
+
+  const result = await pool.query(query, values);
+  return result.rows[0] || null;
 };
 
 export const patchTransaction = async (transactionId, userId, payload) => {
-  const rawResult = await TransactionsCollection.findOneAndUpdate(
-    { _id: transactionId, userId },
-    payload,
-    {
-      new: true,
-      includeResultMetadata: true,
-    },
-  );
+  const query = `
+    UPDATE transactions
+    SET 
+      category = $1,
+      date = $2,
+      sum = $3,
+      type = $4,
+      comment = $5
+    WHERE id = $6 AND user_id = $7
+    RETURNING *
+  `;
+  const values = [
+    payload.category,
+    payload.date,
+    payload.sum,
+    payload.type,
+    payload.comment,
+    transactionId,
+    userId,
+  ];
 
-  return rawResult;
+  const result = await pool.query(query, values);
+  return result.rows[0] || null;
 };

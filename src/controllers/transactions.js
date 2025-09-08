@@ -39,13 +39,13 @@ export const getTransactionsController = async (req, res, next) => {
 export const getTransactionByIdController = async (req, res, next) => {
   try {
     const { transactionId } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(transactionId, req.user._id)) {
-      throw createHttpError(400, 'Invalid transaction ID format');
-    }
-    const transaction = await getTransactionById(transactionId);
+    const userId = req.user.id;
+
+    const transaction = await getTransactionById(transactionId, userId);
     if (!transaction) {
       throw createHttpError(404, 'Transaction not found');
     }
+
     res.json({
       status: 200,
       message: `Successfully found transaction with id ${transactionId}!`,
@@ -57,11 +57,13 @@ export const getTransactionByIdController = async (req, res, next) => {
 };
 
 export const createTransactionController = async (req, res, next) => {
-  try {
+	try {
+		console.log('📩 Incoming body from client:', req.body);
     if (req.body.date) {
       const inputDate = moment(
         req.body.date,
         [
+          moment.ISO_8601,
           'DD-MM-YYYY',
           'YYYY-MM-DD',
           'MM-DD-YYYY',
@@ -77,26 +79,26 @@ export const createTransactionController = async (req, res, next) => {
       );
 
       if (!inputDate.isValid()) {
-        return res.status(400).json({
-          status: 400,
-          message: 'Invalid date format.',
-        });
+        throw createHttpError(400, 'Invalid date format.');
       }
 
-      req.body.date = inputDate.format('DD-MM-YYYY');
+      req.body.date = inputDate.format('YYYY-MM-DD');
     }
 
     const transaction = await createTransaction({
-      userId: req.user._id,
+      userId: req.user.id,
       ...req.body,
     });
 
-    const updatedBalance = await recalculateUserBalance(req.user.id);
+		const updatedBalance = await recalculateUserBalance(req.user.id);
 
     res.status(201).json({
       status: 201,
       message: `Successfully created a transaction!`,
-      data: { transaction, balance: updatedBalance, },
+      data: {
+        transaction,
+        balance: updatedBalance,
+      },
     });
   } catch (error) {
     next(error);
@@ -104,27 +106,29 @@ export const createTransactionController = async (req, res, next) => {
 };
 
 export const patchTransactionController = async (req, res, next) => {
-  try {
+	try {
     const { transactionId } = req.params;
-    const result = await patchTransaction(
+    const userId = req.user.id;
+
+    const updatedTransaction = await patchTransaction(
       transactionId,
-      req.user._id,
+      userId,
       req.body,
     );
-    if (!result) {
-      next(createHttpError(404, 'Transaction not found'));
-      return;
-		}
-		
-		const updatedBalance = await recalculateUserBalance(req.user.id);
+
+    if (!updatedTransaction) {
+      return next(createHttpError(404, 'Transaction not found'));
+    }
+
+    const updatedBalance = await recalculateUserBalance(userId);
 
     res.json({
       status: 200,
-      message: `Successfully patched a transaction!`,
-      data: result.value,
+      message: 'Successfully patched a transaction!',
+      data: updatedTransaction,
       balance: updatedBalance,
     });
-  } catch (error) {
+	} catch (error) {
     next(error);
   }
 };
@@ -137,11 +141,10 @@ export const deleteTransactionController = async (req, res, next) => {
     const transaction = await deleteTransaction(transactionId, userId);
 
     if (!transaction) {
-      next(createHttpError(404, 'Transaction not found'));
-      return;
-		}
-		
-		const updatedBalance = await recalculateUserBalance(req.user.id);
+      return next(createHttpError(404, 'Transaction not found'));
+    }
+
+    await recalculateUserBalance(userId);
 
     res.status(204).send();
   } catch (error) {

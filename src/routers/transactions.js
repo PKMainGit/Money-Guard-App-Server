@@ -5,8 +5,7 @@ import { authenticate } from '../middlewares/authenticate.js';
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
 // import { isValidId } from '../middlewares/isValidId.js';
 import { validateBody } from '../middlewares/validateBody.js';
-import { createTransactionSchema } from '../validation/transaction.js';
-import { updateTransactionSchema } from '../validation/transaction.js';
+import { validateTransaction } from '../validation/transaction.js';
 
 import {
   getTransactionsController,
@@ -24,18 +23,20 @@ router.get('/', getTransactionsController);
 //isValidId,
 router.get('/:transactionId', getTransactionByIdController);
 
-router.post('/', ctrlWrapper(createTransactionController));
+router.post(
+  '/',
+  validateBody(validateTransaction),
+  ctrlWrapper(createTransactionController),
+);
 
 router.delete(
   '/:transactionId',
-  validateBody(createTransactionSchema),
   ctrlWrapper(deleteTransactionController),
 );
 
 router.patch(
   '/:transactionId',
-  // isValidId,
-  validateBody(updateTransactionSchema),
+  validateBody(validateTransaction),
   ctrlWrapper(patchTransactionController),
 );
 

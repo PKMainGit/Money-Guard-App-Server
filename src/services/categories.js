@@ -1,6 +1,15 @@
 // import { TransactionsSchema } from '../models/transaction.js';
-
+export const categories = [
+  'Food',
+  'Transport',
+  'Entertainment',
+  'Salary',
+  'Other',
+];
 export const getCategories = async () => {
+  return categories;
+};
+// export const getCategories = async () => {
   // let allTransactions = [];
   // let userCategory = [];
 
@@ -16,6 +25,6 @@ export const getCategories = async () => {
   // });
   // return userCategory;
 
-  const categories = TransactionsSchema.obj.category.enum;
-  return categories;
-};
+//   const categories = TransactionsSchema.obj.category.enum;
+//   return categories;
+// };
