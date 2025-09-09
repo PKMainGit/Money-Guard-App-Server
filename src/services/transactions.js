@@ -35,16 +35,6 @@ export const getTransactionById = async (transactionId, userId) => {
 
 export const createTransaction = async (payload) => {
 	const { userId, sum, type, category, date, comment } = payload;
-	
-	console.log('🛠 Creating transaction with payload:', {
-    userId,
-    sum,
-    type,
-    category,
-    date,
-    comment,
-    sumType: typeof sum, // подивимось який тип насправді
-  });
 
   const result = await pool.query(
     `INSERT INTO transactions (user_id, sum, type, category, date, comment)
@@ -58,7 +48,7 @@ export const createTransaction = async (payload) => {
 
 
 export const deleteTransaction = async (transactionId, userId) => {
-  const id = Number(transactionId); // явне перетворення в INT
+  const id = Number(transactionId);
   const query = `
     DELETE FROM transactions
     WHERE id = $1 AND user_id = $2
