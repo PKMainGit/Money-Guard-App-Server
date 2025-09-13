@@ -1,7 +1,8 @@
 import { registerUser, loginUser, logoutUser, requestResetPassword, resetPassword } from '../services/auth.js';
-// import { loginOrRegister } from '../services/auth.js';
-// import { getOAuthURL, validateCode } from '../utils/googleOAuth2.js';
 import { recalculateUserBalance } from '../services/calcBalance.js'; 
+import jwt from 'jsonwebtoken';
+import { pool } from '../db/dbConnect.js';
+import createHttpError from 'http-errors';
 
 export const registerUserController = async (req, res) => {
   const { user, tokens } = await registerUser(req.body);
@@ -21,6 +22,8 @@ export const loginUserController = async (req, res) => {
 
   res.cookie('refreshToken', session.refresh_token, {
     httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
     expires: session.refresh_token_valid_until,
   });
   res.cookie('sessionId', session.id, {
@@ -53,46 +56,45 @@ export const logoutUserController = async (req, res) => {
 	res.status(204).send();
 };
 
-// export const getGoogleOAuthUrlController = async (_req, res) => {
-//   const url = getOAuthURL();
-//   res.json({
-//     status: 200,
-//     message: 'Successfully get Google OAuth url!',
-//     data: {
-//       oauth_url: url,
-//     },
-//   });
-// };
+export const refreshTokenController = async (req, res) => {
+  const { refreshToken } = req.cookies;
+  if (!refreshToken) throw createHttpError(401, 'No refresh token');
+	console.log('Cookie refreshToken:', refreshToken);
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+		console.log('Decoded:', decoded);
+    const session = await pool.query(
+      `SELECT * FROM sessions WHERE user_id = $1 AND refresh_token = $2`,
+      [decoded.user_id, refreshToken]
+    );
+		console.log('Session rows:', session.rows);
+    const record = session.rows[0];
+    if (!record) throw createHttpError(401, 'Session not found');
 
-// export async function confirmOAuthController(req, res) {
-//   const ticket = await validateCode(req.body.code);
+    if (new Date() > new Date(record.refresh_token_valid_until)) {
+      throw createHttpError(401, 'Refresh token expired');
+    }
 
-//   const session = await loginOrRegister(
-//     ticket.payload.email,
-//     ticket.payload.name,
-//   );
+    const newAccess = jwt.sign(
+      { user_id: decoded.user_id },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: '1m' }
+    );
 
-//   const setSessionCookies = (res, session) => {
-//     res.cookie('refreshToken', session.refreshToken, {
-//       httpOnly: true,
-//       expires: session.refreshTokenValidUntil,
-//     });
-//     res.cookie('sessionId', session._id, {
-//       httpOnly: true,
-//       expires: session.refreshTokenValidUntil,
-//     });
-//   };
+    await pool.query(
+      `UPDATE sessions SET access_token = $1,
+        access_token_valid_until = $2
+        WHERE id = $3`,
+      [newAccess, new Date(Date.now() + 1 * 60 * 1000), record.id]
+    );
 
-//   setSessionCookies(res, session);
-
-//   res.json({
-//     status: 200,
-//     message: 'Successfully logged in an user!',
-//     data: {
-//       accessToken: session.accessToken,
-//     },
-//   });
-// }
+		res.json({ accessToken: newAccess });
+		return
+	} catch (err) {
+		console.error('Verify error:', err);
+    throw createHttpError(401, 'Invalid refresh token');
+  }
+};
 
 export const requestResetPasswordController = async (req, res) => {
   const { email } = req.body;

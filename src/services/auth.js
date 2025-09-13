@@ -1,8 +1,5 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-// import { randomBytes } from 'crypto';
-// import UserCollection from '../models/userSchema.js';
-// import SessionCollection from '../models/sessionSchema.js';
 import createHttpError from 'http-errors';
 import { getEnvVar } from '../utils/getEnvVar.js';
 import fs from "node:fs/promises";
@@ -12,7 +9,6 @@ import { sendEmail } from '../utils/sendMail.js';
 import { pool } from '../db/dbConnect.js';
 import { generateTokens } from '../utils/generateTokens.js';
 import { ref } from 'node:process';
-// import { ref } from 'node:process';
 
 
 
@@ -38,11 +34,9 @@ export const registerUser = async (payload) => {
     ],
   );
 
-  // const accessToken = randomBytes(30).toString('base64');
-	// const refreshToken = randomBytes(30).toString('base64');
 	const { accessToken, refreshToken } = generateTokens(newUser[0].id)
-	const accessValidUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-	const refreshValidUntil = new Date(Date.now() + 48 * 60 * 60 * 1000);
+	const accessValidUntil = new Date(Date.now() + 1 * 60 * 1000);
+	const refreshValidUntil = new Date(Date.now() + 15 * 60 * 1000);
 
 	await pool.query(
     `INSERT INTO sessions (user_id, access_token, refresh_token, access_token_valid_until,refresh_token_valid_until)
@@ -67,7 +61,6 @@ export const loginUser = async (payload) => {
     `SELECT * FROM users WHERE email = $1`,
     [payload.email],
   );
-  // const user = await UserCollection.findOne({ email: payload.email });
   if (existingUser.rows.length === 0) {
     throw createHttpError(400, 'User not found');
   }
@@ -79,12 +72,11 @@ export const loginUser = async (payload) => {
     throw createHttpError(401, 'Unauthorized');
   }
 
-  // await SessionCollection.deleteOne({ userId: user._id });
   await pool.query(`DELETE FROM sessions WHERE user_id = $1`, [user.id]);
 
   const { accessToken, refreshToken } = generateTokens(user.id);
-  const accessValidUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 години
-  const refreshValidUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 днів
+  const accessValidUntil = new Date(Date.now() + 1 * 60 * 1000); // 1 хв
+  const refreshValidUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 хв
 
 	const sessionResult = await pool.query(
 		`INSERT INTO sessions (user_id, access_token, refresh_token, access_token_valid_until, refresh_token_valid_until)
@@ -105,40 +97,6 @@ export const logoutUser = async (sessionId) => {
   await pool.query(`DELETE FROM sessions WHERE id = $1`, [sessionId]);
   return undefined;
 };
-
-// export async function loginOrRegister(email, name) {
-//   const accessToken = randomBytes(30).toString('base64');
-//   const refreshToken = randomBytes(30).toString('base64');
-
-//   const user = await UserCollection.findOne({ email });
-
-//   if (!user) {
-//     const password = await bcrypt.hash(randomBytes(30).toString('base64'), 10);
-
-//     const newUser = await UserCollection.create({
-//       name,
-//       email,
-//       password,
-//     });
-
-//     return await SessionCollection.create({
-//       userId: newUser._id,
-//       accessToken,
-//       refreshToken,
-//       accessTokenValidUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
-//       refreshTokenValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-//     });
-//   }
-
-//   await SessionCollection.deleteOne({ userId: user._id });
-//   return await SessionCollection.create({
-//     userId: user._id,
-//     accessToken,
-//     refreshToken,
-//     accessTokenValidUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
-//     refreshTokenValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-//   });
-// }
 
 export const requestResetPassword = async (email) => {
   try {
