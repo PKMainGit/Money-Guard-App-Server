@@ -8,9 +8,6 @@ import handlebars from 'handlebars';
 import { sendEmail } from '../utils/sendMail.js';
 import { pool } from '../db/dbConnect.js';
 import { generateTokens } from '../utils/generateTokens.js';
-import { ref } from 'node:process';
-
-
 
 export const registerUser = async (payload) => {
   const existingUser = await pool.query(
@@ -35,8 +32,8 @@ export const registerUser = async (payload) => {
   );
 
 	const { accessToken, refreshToken } = generateTokens(newUser[0].id)
-	const accessValidUntil = new Date(Date.now() + 1 * 60 * 1000);
-	const refreshValidUntil = new Date(Date.now() + 15 * 60 * 1000);
+	const accessValidUntil = new Date(Date.now() + 30 * 60 * 1000);
+	const refreshValidUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
 	await pool.query(
     `INSERT INTO sessions (user_id, access_token, refresh_token, access_token_valid_until,refresh_token_valid_until)
@@ -75,8 +72,8 @@ export const loginUser = async (payload) => {
   await pool.query(`DELETE FROM sessions WHERE user_id = $1`, [user.id]);
 
   const { accessToken, refreshToken } = generateTokens(user.id);
-  const accessValidUntil = new Date(Date.now() + 1 * 60 * 1000); // 1 хв
-  const refreshValidUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 хв
+  const accessValidUntil = new Date(Date.now() + 1 * 60 * 1000);
+  const refreshValidUntil = new Date(Date.now() + 15 * 60 * 1000);
 
 	const sessionResult = await pool.query(
 		`INSERT INTO sessions (user_id, access_token, refresh_token, access_token_valid_until, refresh_token_valid_until)

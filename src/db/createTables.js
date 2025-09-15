@@ -62,7 +62,6 @@ const tables = [
 
 export async function createTables() {
 	try {
-		// Get tables from db
 		const res = await pool.query(`
 				SELECT table_name
 				FROM information_schema.tables
@@ -71,14 +70,12 @@ export async function createTables() {
 		
 		const existingTables = res.rows.map(row => row.table_name);
 		const created = [];
-			// Check existing tables and create table if it not exist in db
 		for (const table of tables) {
 			if (!existingTables.includes(table.name)) {
 				await pool.query(table.query);
 				created.push(table.name);
 			}
 		}
-		// log created tables only
 		if (created.length > 0) {
 			console.log('Created tables: ', created.join(', '));
 		} else {

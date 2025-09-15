@@ -5,9 +5,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import { pool } from '../db/dbConnect.js';
 import { UPLOADS_DIR } from '../constants/index.js';
-// import { getEnvVar } from '../utils/getEnvVar.js';
-// import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
-// import { saveFileToUploadDir } from '../utils/saveFileToUploadDir.js';
 
 export const getCurrentUserController = async (req, res, next) => {
   try {

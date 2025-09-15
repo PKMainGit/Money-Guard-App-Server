@@ -1,11 +1,5 @@
 // import Joi, { string } from 'joi';
 
-// export const registerUserSchema = Joi.object({
-//   name: Joi.string().min(3).max(30).required(),
-//   email: Joi.string().email().required().max(64),
-//   password: Joi.string().min(8).max(64).required(),
-// });
-
 export function validateRegistration(body) {
   // name
   if (!body.name || typeof body.name !== 'string')
@@ -34,11 +28,6 @@ export function validateRegistration(body) {
     return 'Password must be between 8 and 64 characters';
 };
 
-// export const loginUserSchema = Joi.object({
-//   email: Joi.string().email().required(),
-//   password: Joi.string().required(),
-// });
-
 export function validateLogin(body) {
   // email
   if (!body.email || typeof body.email !== 'string')
@@ -49,24 +38,11 @@ export function validateLogin(body) {
     return 'Password is required and must be a string';
 };
 
-// export const confirmOAuthSchema = Joi.object({
-//   code: Joi.string().required(),
-// });
-
-// export const requestResetEmailSchema = Joi.object({
-//   email: Joi.string().email().required(),
-// });
-
 export function validateResetEmail(body) {
 	// email data
 	if (!body.email || typeof body.email !== 'string')
     return 'Email is required and must be a string';
 };
-
-// export const resetEmailSchema = Joi.object({
-//   password: Joi.string().required(),
-//   token: Joi.string().required(),
-// });
 
 export function validateResetPassword(body) {
 	// reset

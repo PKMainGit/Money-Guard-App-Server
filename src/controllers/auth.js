@@ -56,43 +56,60 @@ export const logoutUserController = async (req, res) => {
 	res.status(204).send();
 };
 
-export const refreshTokenController = async (req, res) => {
-  const { refreshToken } = req.cookies;
-  if (!refreshToken) throw createHttpError(401, 'No refresh token');
-	console.log('Cookie refreshToken:', refreshToken);
+export const refreshTokenController = async (req, res, next) => {
   try {
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-		console.log('Decoded:', decoded);
-    const session = await pool.query(
-      `SELECT * FROM sessions WHERE user_id = $1 AND refresh_token = $2`,
-      [decoded.user_id, refreshToken]
-    );
-		console.log('Session rows:', session.rows);
-    const record = session.rows[0];
-    if (!record) throw createHttpError(401, 'Session not found');
-
-    if (new Date() > new Date(record.refresh_token_valid_until)) {
-      throw createHttpError(401, 'Refresh token expired');
+    // 1. Дістаємо refresh-token з HttpOnly cookie
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      return next(createHttpError(401, 'No refresh token'));
     }
 
-    const newAccess = jwt.sign(
+    // 2. Перевіряємо підпис токена
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    } catch (err) {
+      return next(createHttpError(401, 'Invalid refresh token'));
+    }
+
+    // 3. Переконуємось, що така сесія існує
+    const { rows } = await pool.query(
+      `SELECT * FROM sessions
+         WHERE user_id = $1
+           AND refresh_token = $2
+         LIMIT 1`,
+      [decoded.user_id, refreshToken],
+    );
+    const record = rows[0];
+    if (!record) return next(createHttpError(401, 'Session not found'));
+
+    // 4. Перевіряємо строк дії refresh-токена
+    if (new Date() > new Date(record.refresh_token_valid_until)) {
+      return next(createHttpError(401, 'Refresh token expired'));
+    }
+
+    // 5. Генеруємо новий access-токен на 30 хв
+    const newAccessToken = jwt.sign(
       { user_id: decoded.user_id },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: '1m' }
+      { expiresIn: '5m' },
     );
 
+    // 6. Оновлюємо запис сесії (новий access і дата його закінчення)
     await pool.query(
-      `UPDATE sessions SET access_token = $1,
-        access_token_valid_until = $2
-        WHERE id = $3`,
-      [newAccess, new Date(Date.now() + 1 * 60 * 1000), record.id]
+      `UPDATE sessions
+         SET access_token = $1,
+             access_token_valid_until = $2,
+             updated_at = NOW()
+       WHERE id = $3`,
+      [newAccessToken, new Date(Date.now() + 5 * 60 * 1000), record.id],
     );
 
-		res.json({ accessToken: newAccess });
-		return
-	} catch (err) {
-		console.error('Verify error:', err);
-    throw createHttpError(401, 'Invalid refresh token');
+    // 7. Віддаємо клієнту новий access-токен
+    return res.json({ accessToken: newAccessToken });
+  } catch (err) {
+    console.error('Refresh error:', err);
+    return next(createHttpError(401, 'Unable to refresh token'));
   }
 };
 

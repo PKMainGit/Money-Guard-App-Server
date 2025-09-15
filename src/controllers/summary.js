@@ -11,7 +11,6 @@ export const getSummaryController = async (req, res) => {
     const filter = {};
 
     if (date) {
-      // очікуємо формат MM-YYYY
 			const [month, year] = date.split('-').map(Number);
 			if (!month || !year) {
         console.error('Invalid date format:', date);
